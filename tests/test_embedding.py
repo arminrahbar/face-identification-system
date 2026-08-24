@@ -3,7 +3,9 @@ import unittest
 import numpy as np
 from PIL import Image
 
-from identification_service.embedding import FaceEmbeddingExtractor
+from identification_service.modules.extraction.embedding import (
+    FaceEmbeddingExtractor,
+)
 
 
 class RecordingBackend:

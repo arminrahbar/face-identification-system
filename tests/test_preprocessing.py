@@ -3,7 +3,9 @@ import unittest
 import numpy as np
 from PIL import Image
 
-from identification_service.preprocessing import FacePreprocessor
+from identification_service.modules.extraction.preprocessing import (
+    FacePreprocessor,
+)
 
 
 class StubDetector:

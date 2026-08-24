@@ -6,7 +6,9 @@ from dataclasses import dataclass
 
 from numpy.typing import ArrayLike
 
-from identification_service.indexing import ExactCosineIndex
+from identification_service.modules.retrieval.index.bruteforce import (
+    ExactCosineIndex,
+)
 
 
 @dataclass(frozen=True, slots=True)

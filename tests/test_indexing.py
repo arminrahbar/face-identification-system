@@ -2,7 +2,9 @@ import unittest
 
 import numpy as np
 
-from identification_service.indexing import ExactCosineIndex
+from identification_service.modules.retrieval.index.bruteforce import (
+    ExactCosineIndex,
+)
 
 
 class ExactCosineIndexTests(unittest.TestCase):

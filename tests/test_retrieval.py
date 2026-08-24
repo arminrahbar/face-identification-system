@@ -1,7 +1,9 @@
 import unittest
 
-from identification_service.indexing import ExactCosineIndex
-from identification_service.retrieval import rank_identities
+from identification_service.modules.retrieval.index.bruteforce import (
+    ExactCosineIndex,
+)
+from identification_service.modules.retrieval.search import rank_identities
 
 
 class IdentityRankingTests(unittest.TestCase):
