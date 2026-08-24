@@ -7,10 +7,11 @@ probe image.
 ## Project status
 
 This repository is under active development. The current runtime milestone
-implements exact cosine search over gallery-image embeddings and consolidates
-image-level matches into ranked, distinct identities. Face preprocessing,
-embedding extraction, service endpoints, and experiment implementations will be
-added incrementally with tests and validation.
+implements MTCNN-guided face cropping with a controlled full-image fallback,
+exact cosine search over gallery-image embeddings, and consolidation of
+image-level matches into ranked, distinct identities. Embedding extraction,
+service endpoints, and experiment implementations will be added incrementally
+with tests and validation.
 
 ## Intended system boundary
 
