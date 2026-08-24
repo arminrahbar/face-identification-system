@@ -56,6 +56,32 @@ class FaceEmbeddingExtractorTests(unittest.TestCase):
             np.full(3, 0.99609375, dtype=np.float32),
         )
 
+    def test_multiple_images_are_encoded_in_one_batch(self) -> None:
+        backend = RecordingBackend(
+            output=np.ones((2, 512), dtype=np.float32)
+        )
+        extractor = FaceEmbeddingExtractor(backend=backend)
+
+        embeddings = extractor.encode_batch(
+            [
+                Image.new("RGB", (160, 160), "black"),
+                Image.new("RGB", (160, 160), "white"),
+            ]
+        )
+
+        self.assertEqual(embeddings.shape, (2, 512))
+        self.assertEqual(backend.received_batch.shape, (2, 3, 160, 160))
+        np.testing.assert_allclose(
+            backend.received_batch[:, 0, 0, 0],
+            np.array([-0.99609375, 0.99609375], dtype=np.float32),
+        )
+
+    def test_empty_image_batch_is_rejected(self) -> None:
+        extractor = FaceEmbeddingExtractor(backend=RecordingBackend())
+
+        with self.assertRaisesRegex(ValueError, "cannot be empty"):
+            extractor.encode_batch([])
+
     def test_incorrect_image_size_is_rejected(self) -> None:
         extractor = FaceEmbeddingExtractor(backend=RecordingBackend())
 
