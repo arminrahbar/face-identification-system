@@ -1,0 +1,15 @@
+{
+  "artifacts": {
+    "dataset_manifest.csv": "0a0a04d8275b7b54ff2d6faf135ecc5f0e264c51fef9e8fb9a8ee8a2bb8169ef",
+    "dataset_summary.csv": "87c70ce27bf5bb754955390e1902cbc64a93079531f76ccbf2d6858fb38a474c",
+    "gallery_image_count_distribution.csv": "c94279028dd426caea534ffeffddfe73b77db5350ed8bd5efbbf600468840f76"
+  },
+  "closed_set": true,
+  "gallery_identities": 1000,
+  "gallery_images": 2265,
+  "manifest_sha256": "0a0a04d8275b7b54ff2d6faf135ecc5f0e264c51fef9e8fb9a8ee8a2bb8169ef",
+  "probe_identities": 999,
+  "probe_identities_missing_from_gallery": 0,
+  "probe_images": 999,
+  "status": "complete"
+}

@@ -1,0 +1,3 @@
+split,image_count,identity_count,min_images_per_identity,median_images_per_identity,max_images_per_identity,ignored_image_like_files,ignored_other_files
+gallery,2265,1000,1,1.0,10,1765,0
+probe,999,999,1,1,1,499,2
