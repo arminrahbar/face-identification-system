@@ -8,10 +8,10 @@ probe image.
 
 This repository is under active development. The current runtime milestone
 implements MTCNN-guided face cropping with a controlled full-image fallback,
-exact cosine search over gallery-image embeddings, and consolidation of
-image-level matches into ranked, distinct identities. Embedding extraction,
-service endpoints, and experiment implementations will be added incrementally
-with tests and validation.
+VGGFace2-pretrained FaceNet embedding extraction, exact cosine search over
+gallery-image embeddings, and consolidation of image-level matches into ranked,
+distinct identities. Service endpoints and experiment implementations will be
+added incrementally with tests and validation.
 
 ## Intended system boundary
 
