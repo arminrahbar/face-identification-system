@@ -31,8 +31,6 @@ operational monitoring will be added only when they are genuinely implemented.
   figures, and reports.
 - `docs/`: integrated public project report and curated architecture figures.
 - `tests/`: unit and service-level verification.
-- `scratch/`: private interview preparation and temporary run artifacts; ignored
-  by Git.
 
 ## Data policy
 

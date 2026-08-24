@@ -22,7 +22,7 @@ htmlcov/
 Thumbs.db
 ._*
 
-# Private working material
+# Local working artifacts
 scratch/
 experiments/cache/
 experiments/runs/
