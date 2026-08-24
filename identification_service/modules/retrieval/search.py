@@ -3,12 +3,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Protocol
 
 from numpy.typing import ArrayLike
 
 from identification_service.modules.retrieval.index.bruteforce import (
-    ExactCosineIndex,
+    ImageMatch,
 )
+
+
+class ImageSearchIndex(Protocol):
+    """Common search behavior provided by every retrieval backend."""
+
+    def nearest_images(
+        self, probe_embedding: ArrayLike, limit: int | None = None
+    ) -> tuple[ImageMatch, ...]: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,7 +31,7 @@ class IdentityMatch:
 
 
 def rank_identities(
-    index: ExactCosineIndex,
+    index: ImageSearchIndex,
     probe_embedding: ArrayLike,
     *,
     top_k: int = 3,

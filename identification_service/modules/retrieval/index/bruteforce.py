@@ -13,6 +13,69 @@ from numpy.typing import ArrayLike, NDArray
 FloatMatrix = NDArray[np.float32]
 
 
+def _validate_dimension(dimension: int) -> int:
+    """Validate and return an embedding dimension."""
+
+    if isinstance(dimension, bool) or not isinstance(dimension, int):
+        raise TypeError("dimension must be an integer")
+    if dimension <= 0:
+        raise ValueError("dimension must be greater than zero")
+    return dimension
+
+
+def _normalize_embeddings(
+    values: ArrayLike, *, dimension: int, label: str
+) -> FloatMatrix:
+    """Return finite, nonzero embedding rows normalized to unit length."""
+
+    embeddings = np.asarray(values, dtype=np.float32)
+    if embeddings.ndim == 1:
+        embeddings = embeddings.reshape(1, -1)
+    if embeddings.ndim != 2:
+        raise ValueError(f"{label} must be a one- or two-dimensional array")
+    if embeddings.shape[1] != dimension:
+        raise ValueError(
+            f"{label} dimension must be {dimension}; "
+            f"received {embeddings.shape[1]}"
+        )
+    if not np.isfinite(embeddings).all():
+        raise ValueError(f"{label} must contain only finite values")
+
+    norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+    if np.any(norms == 0):
+        raise ValueError(f"{label} cannot contain a zero-length vector")
+
+    return np.ascontiguousarray(embeddings / norms, dtype=np.float32)
+
+
+def _validate_identities(identities: Sequence[str]) -> list[str]:
+    """Validate identity metadata for an embedding batch."""
+
+    if isinstance(identities, (str, bytes)):
+        raise TypeError("identities must be a sequence of identity strings")
+
+    validated = list(identities)
+    if not validated:
+        raise ValueError("identities cannot be empty")
+    if any(not isinstance(identity, str) for identity in validated):
+        raise TypeError("every identity must be a string")
+    if any(not identity.strip() for identity in validated):
+        raise ValueError("identity values cannot be empty or whitespace")
+    return validated
+
+
+def _validate_limit(limit: int | None, available: int) -> int:
+    """Validate a requested result limit and cap it to available rows."""
+
+    if limit is None:
+        return available
+    if isinstance(limit, bool) or not isinstance(limit, int):
+        raise TypeError("limit must be an integer or None")
+    if limit <= 0:
+        raise ValueError("limit must be greater than zero")
+    return min(limit, available)
+
+
 @dataclass(frozen=True, slots=True)
 class ImageMatch:
     """One gallery-image match returned by the embedding index."""
@@ -31,12 +94,7 @@ class ExactCosineIndex:
     """
 
     def __init__(self, dimension: int) -> None:
-        if isinstance(dimension, bool) or not isinstance(dimension, int):
-            raise TypeError("dimension must be an integer")
-        if dimension <= 0:
-            raise ValueError("dimension must be greater than zero")
-
-        self.dimension = dimension
+        self.dimension = _validate_dimension(dimension)
         self._embeddings = np.empty((0, dimension), dtype=np.float32)
         self._identities: list[str] = []
         self._lock = RLock()
@@ -62,8 +120,10 @@ class ExactCosineIndex:
         row cannot leave embeddings and identity metadata out of sync.
         """
 
-        normalized = self._normalize_embeddings(embeddings, label="embeddings")
-        validated_identities = self._validate_identities(identities)
+        normalized = _normalize_embeddings(
+            embeddings, dimension=self.dimension, label="embeddings"
+        )
+        validated_identities = _validate_identities(identities)
 
         if normalized.shape[0] != len(validated_identities):
             raise ValueError(
@@ -81,8 +141,10 @@ class ExactCosineIndex:
     ) -> tuple[ImageMatch, ...]:
         """Return gallery-image matches ordered by descending similarity."""
 
-        probe = self._normalize_embeddings(
-            probe_embedding, label="probe_embedding"
+        probe = _normalize_embeddings(
+            probe_embedding,
+            dimension=self.dimension,
+            label="probe_embedding",
         )
         if probe.shape[0] != 1:
             raise ValueError("probe_embedding must contain exactly one embedding")
@@ -93,7 +155,7 @@ class ExactCosineIndex:
             gallery = self._embeddings.copy()
             identities = tuple(self._identities)
 
-        result_limit = self._validate_limit(limit, len(identities))
+        result_limit = _validate_limit(limit, len(identities))
         similarities = gallery @ probe[0]
         positions = np.argsort(-similarities, kind="stable")[:result_limit]
 
@@ -105,49 +167,3 @@ class ExactCosineIndex:
             )
             for position in positions
         )
-
-    def _normalize_embeddings(
-        self, values: ArrayLike, *, label: str
-    ) -> FloatMatrix:
-        embeddings = np.asarray(values, dtype=np.float32)
-        if embeddings.ndim == 1:
-            embeddings = embeddings.reshape(1, -1)
-        if embeddings.ndim != 2:
-            raise ValueError(f"{label} must be a one- or two-dimensional array")
-        if embeddings.shape[1] != self.dimension:
-            raise ValueError(
-                f"{label} dimension must be {self.dimension}; "
-                f"received {embeddings.shape[1]}"
-            )
-        if not np.isfinite(embeddings).all():
-            raise ValueError(f"{label} must contain only finite values")
-
-        norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
-        if np.any(norms == 0):
-            raise ValueError(f"{label} cannot contain a zero-length vector")
-
-        return np.ascontiguousarray(embeddings / norms, dtype=np.float32)
-
-    @staticmethod
-    def _validate_identities(identities: Sequence[str]) -> list[str]:
-        if isinstance(identities, (str, bytes)):
-            raise TypeError("identities must be a sequence of identity strings")
-
-        validated = list(identities)
-        if not validated:
-            raise ValueError("identities cannot be empty")
-        if any(not isinstance(identity, str) for identity in validated):
-            raise TypeError("every identity must be a string")
-        if any(not identity.strip() for identity in validated):
-            raise ValueError("identity values cannot be empty or whitespace")
-        return validated
-
-    @staticmethod
-    def _validate_limit(limit: int | None, available: int) -> int:
-        if limit is None:
-            return available
-        if isinstance(limit, bool) or not isinstance(limit, int):
-            raise TypeError("limit must be an integer or None")
-        if limit <= 0:
-            raise ValueError("limit must be greater than zero")
-        return min(limit, available)
