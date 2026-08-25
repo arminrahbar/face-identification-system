@@ -15,7 +15,8 @@ The project will contain exactly three experiment families:
   checkpoint comparison.
 - Experiment 02: complete; the full-corpus audit and paired comparison support
   MTCNN crop/fallback preprocessing for first-choice identification.
-- Experiment 03: planned.
+- Experiment 03: in progress; the retrieval-configuration protocol is
+  implemented, with canonical results pending.
 
 Each experiment will use the same numbered folder name under:
 
@@ -32,4 +33,4 @@ embedding-cache, and retrieval-evaluation utilities may live under
 `experiments/scripts/shared/` when more than one experiment uses them.
 
 Only verified outputs and publication-quality figures should be tracked. Raw run
-logs, caches, temporary artifacts, and private study material remain ignored.
+logs, caches, temporary artifacts, and local development notes remain ignored.
