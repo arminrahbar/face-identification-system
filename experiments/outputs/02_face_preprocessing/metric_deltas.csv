@@ -1,0 +1,2 @@
+model,comparison,top_1_delta,top_3_delta,top_5_delta,top_10_delta,mrr_delta
+vggface2,mtcnn_crop_fallback_minus_full_image,0.11011011011011007,0.05205205205205199,0.02902902902902904,0.00800800800800805,0.07339095513544491

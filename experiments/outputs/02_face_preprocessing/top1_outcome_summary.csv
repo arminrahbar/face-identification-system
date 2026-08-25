@@ -1,0 +1,2 @@
+probe_count,both_correct_count,cropping_helps_count,cropping_hurts_count,neither_correct_count,net_top_1_wins,top_1_delta,top_1_delta_ci_95_low,top_1_delta_ci_95_high,mcnemar_exact_two_sided_p_value
+999,783,149,39,28,110,0.11011011011011007,0.08408408408408409,0.13613613613613615,2.381142680672634e-16

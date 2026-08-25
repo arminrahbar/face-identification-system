@@ -1,0 +1,2 @@
+probe_count,rank_improved_count,rank_worsened_count,rank_unchanged_count,mean_rank_delta_crop_minus_full,median_rank_delta_crop_minus_full,mean_probe_embedding_cosine_drift,median_probe_embedding_cosine_drift
+999,156,59,784,16.3023023023023,0.0,0.23414060473442078,0.20756477117538452
