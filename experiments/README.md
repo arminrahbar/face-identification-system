@@ -9,6 +9,13 @@ The project will contain exactly three experiment families:
 3. `03_retrieval_configuration`: evaluate candidate-list length and gallery
    images per identity.
 
+## Status
+
+- Experiment 01: complete; VGGFace2 selected from a verified full-corpus
+  checkpoint comparison.
+- Experiment 02: planned.
+- Experiment 03: planned.
+
 Each experiment will use the same numbered folder name under:
 
 ```text

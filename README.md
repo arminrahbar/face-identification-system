@@ -12,8 +12,9 @@ VGGFace2-pretrained FaceNet embedding extraction, exact cosine retrieval, and
 FAISS-backed HNSW and LSH retrieval over gallery-image embeddings. All three
 backends feed a common ranking layer that consolidates image-level matches into
 ranked, distinct identities. The Flask service exposes gallery enrollment and
-probe-identification endpoints. Experiment implementations will be added
-incrementally with tests and validation.
+probe-identification endpoints. Experiment 01 selected the VGGFace2 checkpoint
+after a complete clean-and-degraded comparison over 999 probe identities; see
+the [experiment report](experiments/reports/01_embedding_robustness/REPORT.md).
 
 ## Intended system boundary
 
