@@ -1,0 +1,141 @@
+{
+  "artifacts": {
+    "fixed_identity_set_summary.csv": {
+      "bytes": 363,
+      "rows": 1,
+      "sha256": "b164057c1081ab76bad8c173e94470348e8b4da826fee1502a507b8de0a17638"
+    },
+    "full_pipeline_rankings_top50.csv": {
+      "bytes": 823581,
+      "rows": 999,
+      "sha256": "a8b021989315e84415b5ab5f0dd6a92bd7aef76c4d4a4dea64dd87171979be18"
+    },
+    "gallery_count_distribution.csv": {
+      "bytes": 315,
+      "rows": 10,
+      "sha256": "d0f2a95ebb8db59f1083aa16dfbc0026374c9c9f8208d222b8ef918eda95f448"
+    },
+    "gallery_m_summary.csv": {
+      "bytes": 3156,
+      "rows": 5,
+      "sha256": "d923cd5f8c4669ce96bf67576b294287bfb16adb331f37cfebee2ac2134dc4c8"
+    },
+    "gallery_m_trial_metrics.csv": {
+      "bytes": 21120,
+      "rows": 150,
+      "sha256": "99f095d960a71894a5302f6671eec8302449e3ab35f467382c1faf5f1820db27"
+    },
+    "topn_curve.csv": {
+      "bytes": 2503,
+      "rows": 50,
+      "sha256": "60b22954ad260e5540fd11b09b1c15b6985dd9e9d41a1ad5497f61158c40352e"
+    },
+    "topn_selected_values.csv": {
+      "bytes": 901,
+      "rows": 7,
+      "sha256": "46ffdbe35363a42e6b9ae3437d024bf08dd835e6ff46ff967f246b64d997bb63"
+    }
+  },
+  "candidate_list": {
+    "decision_policy": {
+      "rule": "smallest_n_meeting_accuracy_target",
+      "target_accuracy": 0.95
+    },
+    "evaluated_counts": [
+      1,
+      50
+    ],
+    "mrr": 0.9410631460373106,
+    "selected_accuracy": 0.950950950950951,
+    "selected_candidate_count": 5,
+    "selected_correct_probes": 950,
+    "selected_report_counts": [
+      1,
+      2,
+      3,
+      5,
+      10,
+      20,
+      50
+    ]
+  },
+  "dataset": {
+    "closed_set": true,
+    "gallery_identities": 1000,
+    "gallery_images": 2265,
+    "probe_identities": 999,
+    "probe_images": 999
+  },
+  "dependencies": {
+    "numpy": "2.4.6"
+  },
+  "experiment": "03_retrieval_configuration",
+  "gallery_depth": {
+    "base_seed": 20260825,
+    "decision_policy": {
+      "reference_m": 5,
+      "rule": "smallest_m_within_tolerance_of_max_m_mean_top_1",
+      "top_1_absolute_tolerance": 0.01
+    },
+    "eligible_identities": 123,
+    "evaluated_images_per_identity": [
+      1,
+      5
+    ],
+    "sampling": "nested_without_replacement_within_each_trial",
+    "selected_gallery_images_per_identity": 2,
+    "selected_mean_top_1": 0.9799457994579949,
+    "trials": 30
+  },
+  "source_pipeline": {
+    "dataset_manifest_sha256": "0a0a04d8275b7b54ff2d6faf135ecc5f0e264c51fef9e8fb9a8ee8a2bb8169ef",
+    "gallery_cache": {
+      "bytes": 4338144,
+      "configuration": {
+        "condition": "mtcnn_crop_fallback",
+        "image_size": 160,
+        "model": "vggface2",
+        "preprocessing_audit_sha256": "6909a7826a558382ee8efcb4017f824ff192e0c43214f5e38b5ea692b58158c7",
+        "schema_version": 1,
+        "selection_fingerprint": "3c5fc8d2226efc01cde23f1f43821625eb6d2601b78f89e910418175ec690063",
+        "split": "gallery",
+        "standardization": "fixed_127_5_div_128"
+      },
+      "filename": "3c5fc8d2226e__vggface2__gallery__mtcnn_crop_fallback.npz",
+      "sha256": "3dee90278b94f6314a71827dec427197cdf8ed765e1f195836d2b125ab67e4f6"
+    },
+    "model": "vggface2",
+    "preprocessing": "mtcnn_crop_fallback",
+    "preprocessing_baseline_check": {
+      "metric_differences": {
+        "mrr": 0.0,
+        "top_1": 0.0,
+        "top_10": 0.0,
+        "top_3": 0.0,
+        "top_5": 0.0
+      },
+      "status": "matched"
+    },
+    "preprocessing_metrics_sha256": "8fb0fe3d96f3d5c7eb504cd3cc5534b68d7035fd105839212c9ad550df0224cf",
+    "preprocessing_run_sha256": "44f050de7ab51b5e28a6ac18c30c12e37599a63565c78639f68ff530db0c7f5c",
+    "probe_cache": {
+      "bytes": 1925961,
+      "configuration": {
+        "condition": "mtcnn_crop_fallback",
+        "image_size": 160,
+        "model": "vggface2",
+        "preprocessing_audit_sha256": "6909a7826a558382ee8efcb4017f824ff192e0c43214f5e38b5ea692b58158c7",
+        "schema_version": 1,
+        "selection_fingerprint": "3c5fc8d2226efc01cde23f1f43821625eb6d2601b78f89e910418175ec690063",
+        "split": "probe",
+        "standardization": "fixed_127_5_div_128"
+      },
+      "filename": "3c5fc8d2226e__vggface2__probe__mtcnn_crop_fallback.npz",
+      "sha256": "c1384cfa1296743ebbb671fd67cfc8e91e394bf9dc617e820e94af564af9fccc"
+    },
+    "ranking_unit": "distinct_identity",
+    "retrieval": "exact_cosine",
+    "selection_fingerprint": "3c5fc8d2226efc01cde23f1f43821625eb6d2601b78f89e910418175ec690063"
+  },
+  "status": "complete"
+}

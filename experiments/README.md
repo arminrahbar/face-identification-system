@@ -1,6 +1,6 @@
 # Experiments
 
-The project will contain exactly three experiment families:
+The project contains exactly three experiment families:
 
 1. `01_embedding_robustness`: compare embedding checkpoints under clean and
    degraded probe conditions.
@@ -15,10 +15,12 @@ The project will contain exactly three experiment families:
   checkpoint comparison.
 - Experiment 02: complete; the full-corpus audit and paired comparison support
   MTCNN crop/fallback preprocessing for first-choice identification.
-- Experiment 03: in progress; the retrieval-configuration protocol is
-  implemented, with canonical results pending.
+- Experiment 03: canonical analysis complete; five returned candidates meet
+  the declared 95% coverage target, and two gallery images per identity retain
+  performance within one percentage point of the five-image reference. Figures
+  and the final report are pending.
 
-Each experiment will use the same numbered folder name under:
+Each experiment uses the same numbered folder name under:
 
 ```text
 experiments/
@@ -28,7 +30,7 @@ experiments/
 └── reports/
 ```
 
-Experiment scripts will be placed inside their own folders. Shared dataset,
+Experiment scripts are placed inside their own folders. Shared dataset,
 embedding-cache, and retrieval-evaluation utilities may live under
 `experiments/scripts/shared/` when more than one experiment uses them.
 

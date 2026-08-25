@@ -18,6 +18,10 @@ the [checkpoint report](experiments/reports/01_embedding_robustness/REPORT.md).
 Experiment 02 then validated MTCNN crop/fallback preprocessing with 99.97% face
 detection coverage and an 11.01-percentage-point Top-1 improvement; see the
 [preprocessing report](experiments/reports/02_face_preprocessing/REPORT.md).
+Experiment 03 measured retrieval configuration over the selected pipeline. Its
+canonical analysis selected five returned candidates as the shortest list
+meeting a 95% coverage target and two gallery images per identity as the
+smallest tested depth within one percentage point of the five-image reference.
 
 ## Intended system boundary
 
@@ -44,7 +48,7 @@ operational monitoring will be added only when they are genuinely implemented.
 The current service keeps gallery embeddings in process memory. Restarting the
 service clears enrolled state; durable index persistence is not implemented yet.
 
-## Planned repository areas
+## Repository structure
 
 - `identification_service/`: backend enrollment and identification service.
 - `experiments/`: three controlled evaluations with matching scripts, outputs,

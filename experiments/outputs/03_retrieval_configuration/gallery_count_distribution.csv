@@ -1,0 +1,11 @@
+gallery_images_per_identity,identity_count,identity_share,cumulative_identity_count,identities_with_at_least_this_many_images
+1,629,0.629,629,1000
+2,118,0.118,747,371
+3,84,0.084,831,253
+4,46,0.046,877,169
+5,26,0.026,903,123
+6,19,0.019,922,97
+7,11,0.011,933,78
+8,11,0.011,944,67
+9,5,0.005,949,56
+10,51,0.051,1000,51
