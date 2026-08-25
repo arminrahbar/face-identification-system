@@ -96,6 +96,27 @@ class IdentificationApplicationTests(unittest.TestCase):
             ["alice", "bob"],
         )
 
+    def test_identification_uses_selected_default_candidate_count(self) -> None:
+        for index in range(6):
+            response = self.client.post(
+                "/add",
+                data={
+                    "identity": f"person-{index}",
+                    "image": self._image_upload("red"),
+                },
+            )
+            self.assertEqual(response.status_code, 201)
+
+        response = self.client.post(
+            "/identify",
+            data={"probe": self._image_upload("red")},
+        )
+        payload = response.get_json()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(payload["requested_top_k"], 5)
+        self.assertEqual(payload["returned_matches"], 5)
+
     def test_identification_rejects_an_empty_gallery(self) -> None:
         response = self.client.post(
             "/identify",

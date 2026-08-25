@@ -34,6 +34,28 @@ class IdentityRankingTests(unittest.TestCase):
 
         self.assertEqual(len(results), 3)
 
+    def test_selected_default_returns_five_distinct_identities(self) -> None:
+        index = ExactCosineIndex(dimension=2)
+        index.add(
+            [
+                [1.0, 0.0],
+                [0.9, 0.1],
+                [0.8, 0.2],
+                [0.7, 0.3],
+                [0.6, 0.4],
+                [0.5, 0.5],
+            ],
+            ["a", "b", "c", "d", "e", "f"],
+        )
+
+        results = rank_identities(index, [1.0, 0.0])
+
+        self.assertEqual(len(results), 5)
+        self.assertEqual(
+            [result.identity for result in results],
+            ["a", "b", "c", "d", "e"],
+        )
+
     def test_invalid_top_k_is_rejected(self) -> None:
         for top_k in (0, -1):
             with self.subTest(top_k=top_k):

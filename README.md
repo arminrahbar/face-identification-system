@@ -41,9 +41,11 @@ operational monitoring will be added only when they are genuinely implemented.
 
 - `POST /add`: accepts an `image` file and `identity` value, then preprocesses,
   embeds, and adds the gallery image to the in-memory index. Multiple images may
-  be enrolled for the same identity.
+  be enrolled for the same identity; the measured operating recommendation is
+  two gallery images per identity when enrollment data is available.
 - `POST /identify`: accepts a `probe` image and optional positive integer `k`,
   then returns up to `k` ranked, distinct identity candidates with match scores.
+  When `k` is omitted, the measured default is five candidates.
 
 The current service keeps gallery embeddings in process memory. Restarting the
 service clears enrolled state; durable index persistence is not implemented yet.

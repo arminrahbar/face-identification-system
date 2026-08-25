@@ -12,6 +12,9 @@ from identification_service.modules.retrieval.index.bruteforce import (
 )
 
 
+DEFAULT_TOP_K = 5
+
+
 class ImageSearchIndex(Protocol):
     """Common search behavior provided by every retrieval backend."""
 
@@ -34,7 +37,7 @@ def rank_identities(
     index: ImageSearchIndex,
     probe_embedding: ArrayLike,
     *,
-    top_k: int = 3,
+    top_k: int = DEFAULT_TOP_K,
 ) -> tuple[IdentityMatch, ...]:
     """Return the highest-scoring distinct identities for a probe embedding.
 

@@ -21,13 +21,13 @@ from identification_service.modules.retrieval.index.bruteforce import (
     ExactCosineIndex,
 )
 from identification_service.modules.retrieval.search import (
+    DEFAULT_TOP_K,
     IdentityMatch,
     ImageSearchIndex,
     rank_identities,
 )
 
 
-DEFAULT_TOP_K = 3
 EMBEDDING_DIMENSION = 512
 
 
