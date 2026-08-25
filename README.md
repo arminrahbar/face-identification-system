@@ -21,7 +21,8 @@ detection coverage and an 11.01-percentage-point Top-1 improvement; see the
 Experiment 03 measured retrieval configuration over the selected pipeline. Its
 canonical analysis selected five returned candidates as the shortest list
 meeting a 95% coverage target and two gallery images per identity as the
-smallest tested depth within one percentage point of the five-image reference.
+smallest tested depth within one percentage point of the five-image reference;
+see the [retrieval configuration report](experiments/reports/03_retrieval_configuration/REPORT.md).
 
 ## Intended system boundary
 
@@ -55,7 +56,6 @@ service clears enrolled state; durable index persistence is not implemented yet.
 - `identification_service/`: backend enrollment and identification service.
 - `experiments/`: three controlled evaluations with matching scripts, outputs,
   figures, and reports.
-- `docs/`: integrated public project report and curated architecture figures.
 - `tests/`: unit and service-level verification.
 
 ## Data policy

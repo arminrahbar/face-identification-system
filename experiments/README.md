@@ -15,10 +15,9 @@ The project contains exactly three experiment families:
   checkpoint comparison.
 - Experiment 02: complete; the full-corpus audit and paired comparison support
   MTCNN crop/fallback preprocessing for first-choice identification.
-- Experiment 03: canonical analysis complete; five returned candidates meet
-  the declared 95% coverage target, and two gallery images per identity retain
-  performance within one percentage point of the five-image reference. Figures
-  and the final report are pending.
+- Experiment 03: complete; five returned candidates meet the declared 95%
+  coverage target, and two gallery images per identity retain performance
+  within one percentage point of the five-image reference.
 
 Each experiment uses the same numbered folder name under:
 
