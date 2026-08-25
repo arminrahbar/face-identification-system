@@ -1,0 +1,38 @@
+{
+  "artifacts": {
+    "detection_records.csv": {
+      "bytes": 1240384,
+      "rows": 3264,
+      "sha256": "7de12012a2244298db847f7ab3f9c824846fc3244bf9b03d8a6640b8b3a26a2b"
+    },
+    "detection_summary.csv": {
+      "bytes": 688,
+      "rows": 3,
+      "sha256": "33baf23420f63e44f5514de04d109bc26c6ad677a7acf9b1baaae92580521cee"
+    }
+  },
+  "dataset": {
+    "manifest_sha256": "0a0a04d8275b7b54ff2d6faf135ecc5f0e264c51fef9e8fb9a8ee8a2bb8169ef",
+    "selected_gallery_images": 2265,
+    "selected_probe_images": 999,
+    "selected_rows_sha256": "99c127567f3a8faa050014fa2639119e4ac6f94501eea0ef066284e7dc83260b",
+    "source_gallery_images": 2265,
+    "source_probe_images": 999
+  },
+  "protocol": {
+    "crop_encoding": "lossless PNG",
+    "detector": "facenet-pytorch MTCNN",
+    "face_selection": "largest detected face",
+    "fallback_policy": "resize full image when no face is detected or detector execution fails",
+    "image_size": 160,
+    "margin": 20
+  },
+  "results": {
+    "coverage_rate": 1.0,
+    "detected_images": 3263,
+    "fallback_images": 1,
+    "processed_images": 3264
+  },
+  "run_scope": "full",
+  "status": "complete"
+}

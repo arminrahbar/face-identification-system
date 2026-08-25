@@ -13,7 +13,8 @@ The project will contain exactly three experiment families:
 
 - Experiment 01: complete; VGGFace2 selected from a verified full-corpus
   checkpoint comparison.
-- Experiment 02: planned.
+- Experiment 02: in progress; the full-corpus MTCNN detection and crop/fallback
+  audit is complete, and the paired retrieval comparison is pending.
 - Experiment 03: planned.
 
 Each experiment will use the same numbered folder name under:
