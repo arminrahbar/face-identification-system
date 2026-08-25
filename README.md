@@ -14,7 +14,10 @@ backends feed a common ranking layer that consolidates image-level matches into
 ranked, distinct identities. The Flask service exposes gallery enrollment and
 probe-identification endpoints. Experiment 01 selected the VGGFace2 checkpoint
 after a complete clean-and-degraded comparison over 999 probe identities; see
-the [experiment report](experiments/reports/01_embedding_robustness/REPORT.md).
+the [checkpoint report](experiments/reports/01_embedding_robustness/REPORT.md).
+Experiment 02 then validated MTCNN crop/fallback preprocessing with 99.97% face
+detection coverage and an 11.01-percentage-point Top-1 improvement; see the
+[preprocessing report](experiments/reports/02_face_preprocessing/REPORT.md).
 
 ## Intended system boundary
 
