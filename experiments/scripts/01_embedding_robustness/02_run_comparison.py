@@ -252,18 +252,30 @@ def run_comparison(
             str(row["probe_relative_path"]),
         )
     )
+    model_summary_rows, selected_model = summarize_models(
+        metric_rows=metric_rows,
+        stability_rows=stability_rows,
+    )
 
     metrics_path = output_dir / "condition_metrics.csv"
+    model_summary_path = output_dir / "model_summary.csv"
     stability_path = output_dir / "rank_stability.csv"
     rankings_path = output_dir / "probe_rankings.csv"
     quality_path = output_dir / "image_quality_summary.csv"
 
     _write_csv(metrics_path, metric_rows)
+    _write_csv(model_summary_path, model_summary_rows)
     _write_csv(stability_path, stability_rows)
     _write_csv(rankings_path, ranking_rows)
     _write_csv(quality_path, quality_rows)
 
-    artifact_paths = (metrics_path, stability_path, rankings_path, quality_path)
+    artifact_paths = (
+        metrics_path,
+        model_summary_path,
+        stability_path,
+        rankings_path,
+        quality_path,
+    )
     run_manifest = {
         "status": "complete",
         "run_scope": run_scope,
@@ -286,6 +298,16 @@ def run_comparison(
             "retrieval": "exact_cosine",
             "ranking_unit": "distinct_identity",
         },
+        "selection": {
+            "primary_metric": "mean_top_1_across_equal_weight_conditions",
+            "tie_breakers": [
+                "worst_condition_top_1",
+                "mean_mrr_across_equal_weight_conditions",
+                "clean_top_1",
+            ],
+            "status": "selected" if selected_model is not None else "tie",
+            "selected_model": selected_model,
+        },
         "dependencies": _dependency_versions(),
         "artifacts": {
             path.name: _sha256_file(path) for path in artifact_paths
@@ -302,6 +324,10 @@ def run_comparison(
             f"Top-1={row['top_1']:.4f} "
             f"Top-3={row['top_3']:.4f} MRR={row['mrr']:.4f}"
         )
+    if selected_model is None:
+        print("Selection result: exact metric tie; no checkpoint selected")
+    else:
+        print(f"Selection result: {selected_model}")
     for path in (*artifact_paths, run_manifest_path):
         print(f"[WRITE] {path}")
 
@@ -598,6 +624,109 @@ def summarize_image_quality(
             }
         )
     return rows
+
+
+def summarize_models(
+    *,
+    metric_rows: Sequence[dict[str, object]],
+    stability_rows: Sequence[dict[str, object]],
+) -> tuple[list[dict[str, object]], str | None]:
+    """Aggregate condition metrics and apply the declared selection policy."""
+
+    summaries: list[dict[str, object]] = []
+    model_names = sorted({str(row["model"]) for row in metric_rows})
+
+    for model_name in model_names:
+        model_metrics = [
+            row for row in metric_rows if row["model"] == model_name
+        ]
+        condition_names = {str(row["condition"]) for row in model_metrics}
+        if condition_names != set(CONDITIONS):
+            raise ValueError(
+                f"model {model_name} does not have every required condition"
+            )
+
+        clean_row = next(
+            row for row in model_metrics if row["condition"] == "clean"
+        )
+        worst_row = min(
+            model_metrics,
+            key=lambda row: (
+                float(row["top_1"]),
+                float(row["mrr"]),
+                str(row["condition"]),
+            ),
+        )
+        model_stability = [
+            row for row in stability_rows if row["model"] == model_name
+        ]
+        if len(model_stability) != len(CONDITIONS) - 1:
+            raise ValueError(
+                f"model {model_name} does not have every stability condition"
+            )
+
+        summaries.append(
+            {
+                "model": model_name,
+                "condition_count": len(model_metrics),
+                "clean_top_1": float(clean_row["top_1"]),
+                "mean_top_1": float(
+                    np.mean([float(row["top_1"]) for row in model_metrics])
+                ),
+                "worst_condition": worst_row["condition"],
+                "worst_condition_top_1": float(worst_row["top_1"]),
+                "mean_mrr": float(
+                    np.mean([float(row["mrr"]) for row in model_metrics])
+                ),
+                "mean_rank_1_changed_rate": float(
+                    np.mean(
+                        [
+                            float(row["rank_1_changed_rate"])
+                            for row in model_stability
+                        ]
+                    )
+                ),
+                "mean_cosine_embedding_drift": float(
+                    np.mean(
+                        [
+                            float(row["mean_cosine_embedding_drift"])
+                            for row in model_stability
+                        ]
+                    )
+                ),
+            }
+        )
+
+    summaries.sort(
+        key=lambda row: (
+            -float(row["mean_top_1"]),
+            -float(row["worst_condition_top_1"]),
+            -float(row["mean_mrr"]),
+            -float(row["clean_top_1"]),
+            str(row["model"]),
+        )
+    )
+
+    for rank, row in enumerate(summaries, start=1):
+        row["selection_rank"] = rank
+
+    best = summaries[0]
+    selection_fields = (
+        "mean_top_1",
+        "worst_condition_top_1",
+        "mean_mrr",
+        "clean_top_1",
+    )
+    tied_best = [
+        row
+        for row in summaries
+        if all(row[field] == best[field] for field in selection_fields)
+    ]
+    selected_model = str(best["model"]) if len(tied_best) == 1 else None
+    for row in summaries:
+        row["selected"] = row["model"] == selected_model
+
+    return summaries, selected_model
 
 
 def select_scope(

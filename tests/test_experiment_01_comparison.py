@@ -131,6 +131,75 @@ class EmbeddingRobustnessComparisonTests(unittest.TestCase):
         self.assertEqual(rows[0]["mean_intensity"], 0.5)
         self.assertNotIn("mean_luminance", rows[0])
 
+    def test_model_selection_uses_declared_robustness_policy(self) -> None:
+        metric_rows = []
+        stability_rows = []
+        scores = {
+            "vggface2": [0.9, 0.8, 0.8, 0.7, 0.8],
+            "casia-webface": [0.7, 0.6, 0.5, 0.6, 0.6],
+        }
+
+        for model_name, top_1_values in scores.items():
+            for condition, top_1 in zip(MODULE.CONDITIONS, top_1_values):
+                metric_rows.append(
+                    {
+                        "model": model_name,
+                        "condition": condition,
+                        "top_1": top_1,
+                        "mrr": top_1 + 0.05,
+                    }
+                )
+                if condition != "clean":
+                    stability_rows.append(
+                        {
+                            "model": model_name,
+                            "condition": condition,
+                            "rank_1_changed_rate": 0.1,
+                            "mean_cosine_embedding_drift": 0.05,
+                        }
+                    )
+
+        summaries, selected_model = MODULE.summarize_models(
+            metric_rows=metric_rows,
+            stability_rows=stability_rows,
+        )
+
+        self.assertEqual(selected_model, "vggface2")
+        self.assertEqual(summaries[0]["selection_rank"], 1)
+        self.assertTrue(summaries[0]["selected"])
+        self.assertEqual(summaries[0]["worst_condition_top_1"], 0.7)
+
+    def test_model_selection_reports_an_exact_tie(self) -> None:
+        metric_rows = []
+        stability_rows = []
+        for model_name in MODULE.MODELS:
+            for condition in MODULE.CONDITIONS:
+                metric_rows.append(
+                    {
+                        "model": model_name,
+                        "condition": condition,
+                        "top_1": 0.8,
+                        "mrr": 0.9,
+                    }
+                )
+                if condition != "clean":
+                    stability_rows.append(
+                        {
+                            "model": model_name,
+                            "condition": condition,
+                            "rank_1_changed_rate": 0.1,
+                            "mean_cosine_embedding_drift": 0.05,
+                        }
+                    )
+
+        summaries, selected_model = MODULE.summarize_models(
+            metric_rows=metric_rows,
+            stability_rows=stability_rows,
+        )
+
+        self.assertIsNone(selected_model)
+        self.assertFalse(any(row["selected"] for row in summaries))
+
 
 if __name__ == "__main__":
     unittest.main()
