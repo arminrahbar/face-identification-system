@@ -2,7 +2,7 @@
 
 ## Decision
 
-The selected face-identification pipeline will return **five distinct identity
+The selected face-identification pipeline returns **five distinct identity
 candidates by default**. `N=5` is the shortest evaluated list that satisfies the
 declared 95% closed-set coverage target: the correct identity appeared within
 the first five positions for 950 of 999 probes, or 95.10%.
@@ -14,6 +14,8 @@ percentage points below the `m=5` reference and therefore satisfied the
 predefined rule of selecting the smallest `m` within one percentage point of
 the five-image result.
 
+**Table 1. Selected retrieval configuration**
+
 | Configuration decision | Selected value | Decision evidence |
 |---|---:|---|
 | Returned identity candidates | `N=5` | First list length reaching 95% coverage |
@@ -21,6 +23,10 @@ the five-image result.
 | Embedding checkpoint | VGGFace2 | Fixed by Experiment 01 |
 | Preprocessing | MTCNN crop/fallback | Fixed by Experiment 02 |
 | Search and ranking | Exact cosine; distinct identities | Held constant |
+
+**Interpretation.** The two selected values control different operational costs:
+`N=5` limits review burden, while `m=2` balances enrollment effort against
+first-choice retrieval quality. Neither value is an open-set identity threshold.
 
 These are operating defaults, not universal thresholds. The candidate target
 reflects an explicit product trade-off, while the gallery recommendation is
@@ -55,7 +61,7 @@ collapsed into distinct identities by retaining each identity's highest-scored
 gallery image.
 
 Candidate coverage was calculated for every `N` from 1 through 50. The decision
-rule was fixed before the canonical run: choose the smallest `N` with Top-N
+rule was declared before evaluation: choose the smallest `N` with Top-N
 accuracy of at least 95%.
 
 The gallery-depth analysis required a different controlled population. A fair
@@ -70,8 +76,8 @@ produced 150 evaluations—30 trials at each of five gallery depths. The declare
 decision rule selected the smallest `m` whose mean Top-1 result was within one
 percentage point of the `m=5` mean.
 
-Both analyses reused the verified Experiment 02 embedding caches. Experiment
-03 exactly reproduced Experiment 02's selected-pipeline Top-1, Top-3, Top-5,
+Both analyses reused the verified embeddings produced under the Experiment 02
+policy. Experiment 03 exactly reproduced Experiment 02's selected-pipeline Top-1, Top-3, Top-5,
 Top-10, and MRR values before applying either configuration analysis.
 
 ## Candidate-list result
@@ -83,6 +89,12 @@ the shortest list meeting the 95% target. Extending the list from five to fifty
 recovers only five additional probes while exposing up to 45 more candidates
 per request.*
 
+**Interpretation.** The curve has strong diminishing returns: the first five
+positions recover most identities available within the first fifty, while
+longer lists add reviewer burden for few additional recoveries.
+
+**Table 2. Candidate-list coverage at selected operating points**
+
 | Candidates (`N`) | Correct probes | Coverage | Missed probes | Recovered since prior reported `N` |
 |---:|---:|---:|---:|---:|
 | 1 | 932 | 93.29% | 67 | — |
@@ -92,6 +104,9 @@ per request.*
 | 10 | 953 | 95.40% | 46 | +3 |
 | 20 | 953 | 95.40% | 46 | 0 |
 | 50 | 955 | 95.60% | 44 | +2 |
+
+**Interpretation.** `N=5` is the first tested list length to meet the 95% target.
+Increasing the list from five to fifty recovers only five additional probes.
 
 The curve shows strong diminishing returns. Moving from one to two candidates
 recovers 11 additional probes. Moving from three to five recovers three and is
@@ -114,6 +129,12 @@ provides the dominant gain and materially reduces sensitivity to image
 selection. Images three through five continue to help, but their incremental
 improvements are much smaller.*
 
+**Interpretation.** The second gallery image supplies the largest incremental
+gain and reduces trial-to-trial variability. Later images add less than one
+percentage point of mean Top-1 improvement in total.
+
+**Table 3. Gallery-depth retrieval results across 30 nested trials**
+
 | Images per identity (`m`) | Gallery images | Mean Top-1 | Std. dev. | Trial range | Incremental gain |
 |---:|---:|---:|---:|---:|---:|
 | 1 | 123 | 94.44% | 1.42 pp | 91.06–96.75% | — |
@@ -121,6 +142,10 @@ improvements are much smaller.*
 | 3 | 369 | 98.54% | 0.39 pp | 97.56–99.19% | +0.54 pp |
 | 4 | 492 | 98.62% | 0.43 pp | 97.56–99.19% | +0.08 pp |
 | 5 | 615 | 98.75% | 0.41 pp | 98.37–99.19% | +0.14 pp |
+
+**Interpretation.** Two images meet the declared tolerance relative to the
+five-image reference while using 60% fewer gallery images. The remaining depth
+increases yield comparatively small gains.
 
 The one-image condition depends strongly on which photograph happens to be
 selected: individual trials produced between 112 and 119 correct Rank-1
@@ -141,7 +166,7 @@ percentage point of mean Top-1 improvement over `m=2`.
 images, so the gallery-depth experiment uses a fixed 123-identity subset rather
 than changing the evaluated population at each value of `m`.*
 
-The complete gallery is highly imbalanced. Of 1,000 identities, 629 have only
+**Interpretation.** The complete gallery is highly imbalanced. Of 1,000 identities, 629 have only
 one gallery image and 371 have at least two. The population falls to 253 at
 three images, 169 at four images, and 123 at five images.
 
@@ -151,7 +176,7 @@ only 123. Keeping the same 123 identities isolates the effect of adding images,
 but it also narrows the result's scope. These identities may be easier to match
 or better represented than the overall gallery population.
 
-## Engineering impact
+## Engineering decision and downstream impact
 
 The runtime now uses five as the shared default for distinct-identity ranking
 and for `/identify` requests that omit `k`. API callers can still request any
@@ -186,15 +211,22 @@ The decisions therefore become:
 - Exact brute-force retrieval is appropriate at this scale. Larger deployments
   require separate latency, memory, and approximate-index recall evaluation.
 
-## Reproducibility
+## Implementation and reproducibility
 
-- Configuration analysis: [`01_analyze_configuration.py`](../../scripts/03_retrieval_configuration/01_analyze_configuration.py)
-- Figure generation: [`02_generate_figures.py`](../../scripts/03_retrieval_configuration/02_generate_figures.py)
-- Canonical outputs: [`outputs/03_retrieval_configuration`](../../outputs/03_retrieval_configuration/)
-- Runtime identity ranking: [`search.py`](../../../identification_service/modules/retrieval/search.py)
-- HTTP interface: [`app.py`](../../../identification_service/app.py)
+The experiment and its runtime consequences are implemented through these code
+paths:
 
-The canonical run used `numpy 2.4.6`. Its manifest records the complete dataset
-fingerprint, selected Experiment 02 cache hashes and configurations, exact
-baseline-reproduction result, both decision policies, deterministic base seed,
-and SHA-256 metadata for every tracked result table.
+- `experiments/scripts/03_retrieval_configuration/01_analyze_configuration.py`
+  evaluates candidate-list length and gallery depth under the declared rules;
+- `identification_service/modules/retrieval/search.py` performs exact cosine
+  search and distinct-identity consolidation;
+- `identification_service/app.py` applies the selected candidate-list default at
+  the HTTP interface.
+
+Python dependencies are defined in the repository-level `requirements.txt`, and
+the analysis script exposes its input and execution contract through `--help`.
+A valid reproduction must preserve the Experiment 02 embedding policy, the
+999-probe candidate analysis, the fixed 123-identity gallery-depth population,
+30 deterministic nested trials per depth, and both decision rules described
+above. The Experiment 02 Top-k and MRR results must be reproduced before either
+configuration decision is accepted.

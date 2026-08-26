@@ -13,6 +13,8 @@ The paired 95% bootstrap interval was +8.41 to +13.61 percentage points, the
 exact McNemar p-value was `2.38 × 10⁻¹⁶`, mean reciprocal rank improved by
 0.0734, and the fallback policy preserved 100% processing coverage.
 
+**Table 1. Preprocessing-policy decision scorecard**
+
 | Decision measure | Full image | MTCNN crop/fallback | Difference |
 |---|---:|---:|---:|
 | Top-1 accuracy | 82.28% | **93.29%** | **+11.01 pp** |
@@ -22,13 +24,17 @@ exact McNemar p-value was `2.38 × 10⁻¹⁶`, mean reciprocal rank improved by
 | Mean reciprocal rank | 0.8677 | **0.9411** | +0.0734 |
 | Processing coverage | 100% | 100% | — |
 
+**Interpretation.** Crop/fallback improves every reported retrieval endpoint
+while preserving complete processing coverage, satisfying all four declared
+adoption requirements.
+
 ![Preprocessing decision](../../figures/02_face_preprocessing/01_preprocessing_decision.png)
 
 *Figure 1. Controlled retrieval comparison. Cropping improved every reported
 Top-k endpoint and MRR. In the paired Top-1 analysis, it fixed 149 probes and
 broke 39, yielding 110 net additional correct first-ranked identities.*
 
-The aggregate decision does not imply that every crop was beneficial. Cropping
+**Interpretation.** The aggregate decision does not imply that every crop was beneficial. Cropping
 introduced a smaller but important failure tail, including several very large
 rank regressions. The selected policy therefore combines cropping with an
 explicit fallback and exposes preprocessing metadata for operational review.
@@ -49,8 +55,9 @@ This experiment separated those effects into two questions:
 2. Does using those crops improve identity retrieval when all other system
    components remain fixed?
 
-The detection audit was completed first. The paired retrieval comparison was
-then defined and implemented before its full results were examined.
+The detection audit established processing coverage first. The paired retrieval
+comparison then evaluated ranking quality under adoption criteria declared
+before the complete comparison was run.
 
 ## Evaluation design
 
@@ -67,6 +74,8 @@ from enrollment or identification.
 
 The retrieval comparison changed only preprocessing:
 
+**Table 2. Controlled retrieval-comparison design**
+
 | Controlled component | Policy |
 |---|---|
 | Condition A | Full source image resized to 160 × 160 |
@@ -77,6 +86,10 @@ The retrieval comparison changed only preprocessing:
 | Ranking unit | Distinct identity |
 | Gallery | Same 2,265 images in both conditions |
 | Probes | Same 999 identities in both conditions |
+
+**Interpretation.** Only the image region supplied to the embedding model
+changes. The checkpoint, normalization, gallery, probes, similarity metric, and
+identity-ranking policy remain fixed.
 
 The full-image condition was also required to reproduce Experiment 01's clean
 VGGFace2 Top-1, Top-3, Top-5, Top-10, and MRR values exactly. All five metrics
@@ -90,11 +103,21 @@ matched, ruling out pipeline drift between experiments.
 images. The one gallery miss used the defined full-image fallback, so no image
 was dropped. Detected crops retained a median 23.85% of source-image area.*
 
+**Interpretation.** MTCNN provides near-complete face localization, while the
+fallback converts the single miss into a processed request instead of a dropped
+image. The broad crop-area range still requires inspection of extreme cases.
+
+**Table 3. MTCNN detection and fallback coverage**
+
 | Split | Images | Faces detected | Fallbacks | Detection rate | Coverage |
 |---|---:|---:|---:|---:|---:|
 | Gallery | 2,265 | 2,264 | 1 | 99.96% | 100% |
 | Probe | 999 | 999 | 0 | 100% | 100% |
 | Overall | 3,264 | 3,263 | 1 | 99.97% | 100% |
+
+**Interpretation.** The detector missed one gallery image and no probes. Because
+the declared fallback handled that miss, both enrollment and probe processing
+retained 100% coverage.
 
 The median crop occupied 23.85% of its source image, while the mean occupied
 24.14%. In aggregate, preprocessing therefore removed roughly three-quarters of
@@ -113,12 +136,18 @@ important when interpreting the retrieval failure tail.
 
 The paired outcomes make the source of the 11.01-point improvement explicit:
 
+**Table 4. Paired Top-1 outcome transitions**
+
 | Paired Top-1 outcome | Probe identities | Share |
 |---|---:|---:|
 | Correct under both policies | 783 | 78.38% |
 | Correct only after cropping | 149 | 14.91% |
 | Correct only with the full image | 39 | 3.90% |
 | Incorrect under both policies | 28 | 2.80% |
+
+**Interpretation.** Cropping corrected 149 first-choice errors while introducing
+39 new ones, producing a net gain of 110 correct probes. The remaining 811
+probes did not change correctness state.
 
 The bootstrap repeatedly resampled the 999 paired probe outcomes with
 replacement while keeping each probe's two condition results together. Across
@@ -140,7 +169,7 @@ left 784 unchanged, and worsened 59. It dominated short candidate lists through
 Top-10, while a smaller number of severe regressions reduced long-list
 coverage.*
 
-Top-1 and MRR summarize operationally important behavior, but they do not
+**Interpretation.** Top-1 and MRR summarize operationally important behavior, but they do not
 describe every rank movement. Across all probes:
 
 - true-identity rank improved for 156 probes;
@@ -177,7 +206,7 @@ Operationally, the result supports four requirements:
    observable.
 3. Monitor identity-ranking failures separately from detector coverage; a
    confident face detection can still select the wrong person.
-4. Use the long-tail result as an input to Experiment 03, which will evaluate
+4. Use the long-tail result as an input to Experiment 03, which evaluated
    candidate-list length and gallery images per identity.
 
 No similarity threshold or unknown-person rejection policy is inferred from
@@ -201,16 +230,22 @@ this experiment. Those controls require open-set evaluation data.
   evidence. The long-rank tail is reported separately rather than optimized by
   that rule.
 
-## Reproducibility
+## Implementation and reproducibility
 
-- Detection audit: [`01_audit_preprocessing.py`](../../scripts/02_face_preprocessing/01_audit_preprocessing.py)
-- Paired retrieval comparison: [`02_compare_retrieval.py`](../../scripts/02_face_preprocessing/02_compare_retrieval.py)
-- Figure generation: [`03_generate_figures.py`](../../scripts/02_face_preprocessing/03_generate_figures.py)
-- Canonical outputs: [`outputs/02_face_preprocessing`](../../outputs/02_face_preprocessing/)
-- Runtime preprocessing: [`preprocessing.py`](../../../identification_service/modules/extraction/preprocessing.py)
+The experiment is implemented through three public code paths:
 
-The canonical comparison used Python 3.11, CPU inference, batch size 32,
-`facenet-pytorch 2.5.3`, `torch 2.12.1`, and `numpy 2.4.6`. Its manifests record
-the dataset fingerprint, preprocessing-audit fingerprint, dependency versions,
-decision policy, baseline-reproduction result, and SHA-256 hash of every result
-table.
+- `experiments/scripts/02_face_preprocessing/01_audit_preprocessing.py` measures
+  MTCNN detection coverage and validates the fallback policy across the corpus;
+- `experiments/scripts/02_face_preprocessing/02_compare_retrieval.py` performs
+  the paired full-image versus crop/fallback retrieval comparison;
+- `identification_service/modules/extraction/preprocessing.py` contains the
+  runtime preprocessing policy evaluated here.
+
+The external gallery and probe assets must follow the layout documented in
+`identification_service/storage/README.md`. Python dependencies are defined in
+the repository-level `requirements.txt`, and both experiment scripts expose
+their input and execution contracts through `--help`. A valid reproduction must
+retain the same 3,264-image audit population, 999 paired probes, VGGFace2
+checkpoint, ranking policy, and fallback behavior described above. The
+full-image condition must also reproduce Experiment 01's five clean retrieval
+metrics before the preprocessing comparison is accepted.

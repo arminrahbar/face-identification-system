@@ -24,6 +24,10 @@ meeting a 95% coverage target and two gallery images per identity as the
 smallest tested depth within one percentage point of the five-image reference;
 see the [retrieval configuration report](experiments/reports/03_retrieval_configuration/REPORT.md).
 
+The integrated [engineering report](docs/PROJECT_REPORT.md) connects the
+runtime architecture, experimental decisions, packaging, limitations, and next
+engineering priorities.
+
 ## Intended system boundary
 
 The initial backend component will support two primary workflows:
@@ -120,6 +124,7 @@ dependencies, routes, and Gunicorn configuration.
 - `identification_service/`: backend enrollment and identification service.
 - `experiments/`: three controlled evaluations with matching scripts, outputs,
   figures, and reports.
+- `docs/`: integrated engineering report and its curated publication figures.
 - `tests/`: unit and service-level verification.
 
 ## Data policy

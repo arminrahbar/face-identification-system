@@ -11,6 +11,8 @@ CASIA-WebFace clean baseline of 22.72%.
 The selection was determined by the declared primary metric, mean Top-1
 accuracy across conditions. The tie-breakers were not required.
 
+**Table 1. Checkpoint-selection scorecard**
+
 | Selection measure | VGGFace2 | CASIA-WebFace |
 |---|---:|---:|
 | Clean Top-1 | 82.28% | 22.72% |
@@ -19,6 +21,10 @@ accuracy across conditions. The tie-breakers were not required.
 | Mean reciprocal rank | **83.86%** | 24.26% |
 | Mean rank-1 changed rate | **13.34%** | 60.04% |
 | Mean cosine embedding drift | **0.0443** | 0.0868 |
+
+**Interpretation.** VGGFace2 leads on clean quality, average and worst-condition
+Top-1, reciprocal rank, and both stability measures. The primary metric selects
+it without invoking a tie-breaker.
 
 ## Why this experiment was necessary
 
@@ -59,6 +65,8 @@ positions.
 
 The gallery remained clean. Every probe was evaluated under five conditions:
 
+**Table 2. Controlled probe conditions**
+
 | Condition | Transformation | Purpose |
 |---|---|---|
 | Clean | No degradation | Establish the reference result |
@@ -66,6 +74,10 @@ The gallery remained clean. Every probe was evaluated under five conditions:
 | Reduced resolution | Downsample to 64 × 64, then enlarge | Measure sensitivity to lost spatial detail |
 | Dark | Brightness factor 0.60 | Measure low-illumination sensitivity |
 | Bright | Brightness factor 1.40 | Measure overexposure and clipping sensitivity |
+
+**Interpretation.** The design changes checkpoint and probe condition while
+holding the gallery, identity population, image preparation, embedding
+normalization, similarity metric, and identity-ranking policy constant.
 
 Face detection and cropping were intentionally excluded. Full-image processing
 isolated the embedding checkpoint as the independent variable; preprocessing is
@@ -79,7 +91,7 @@ evaluated separately in Experiment 02.
 higher Top-1 accuracy and MRR while changing its first-ranked identity much less
 frequently under degradation. Each condition contains 999 probes.*
 
-VGGFace2 outperformed CASIA-WebFace in every condition and on every reported
+**Interpretation.** VGGFace2 outperformed CASIA-WebFace in every condition and on every reported
 retrieval measure. The margin was not limited to clean input: VGGFace2's
 reduced-resolution Top-1 result exceeded CASIA-WebFace's clean result by 51.45
 percentage points.
@@ -91,6 +103,8 @@ that of VGGFace2.
 
 ## Selected-checkpoint behavior
 
+**Table 3. VGGFace2 retrieval quality by probe condition**
+
 | Probe condition | Top-1 | Top-3 | Top-5 | Top-10 | MRR | Top-1 drop from clean |
 |---|---:|---:|---:|---:|---:|---:|
 | Clean | 82.28% | 89.59% | 92.19% | 94.59% | 86.77% | — |
@@ -99,13 +113,17 @@ that of VGGFace2.
 | Blur | 76.58% | 87.09% | 89.49% | 92.69% | 82.42% | 5.71 pp |
 | Reduced resolution | 74.17% | 85.19% | 88.39% | 91.89% | 80.53% | 8.11 pp |
 
+**Interpretation.** Every degradation reduces first-choice accuracy, but reduced
+resolution and blur cause the largest losses. Candidate-list accuracy declines
+more slowly than Top-1 because many correct identities remain near the top.
+
 ![VGGFace2 robustness](../../figures/01_embedding_robustness/02_vggface2_robustness.png)
 
 *Figure 2. VGGFace2 robustness profile. Reduced resolution caused the largest
 accuracy loss, lowest clean-correct retention, and greatest embedding drift.
 Candidate-list accuracy nevertheless remained above 88% at Top-5.*
 
-Reduced resolution was the hardest tested condition. It removed fine facial
+**Interpretation.** Reduced resolution was the hardest tested condition. It removed fine facial
 detail that cannot be recovered by enlarging the image. Under that condition,
 VGGFace2 retained 88.56% of the 822 probes it originally ranked correctly at
 Top-1. Blur was the next most damaging condition. Both brightness conditions
@@ -124,7 +142,7 @@ longer ranked first.
 brightness transformations changed mean intensity as intended, while blur and
 resizing reduced exact pixel extremes through interpolation.*
 
-Darkening reduced mean channel intensity from 37.33% to 22.26%. Brightening
+**Interpretation.** Darkening reduced mean channel intensity from 37.33% to 22.26%. Brightening
 raised it to 49.28% and saturated 15.69% of pixels. These measurements confirm
 that the robustness results correspond to material changes in probe appearance,
 not mislabeled or ineffective transformations.
@@ -136,10 +154,10 @@ default embedding backend. The selection is supported by accuracy, ranking
 quality, prediction stability, and representation stability—not one isolated
 metric.
 
-The results also set the reference for Experiment 02. That experiment will hold
-VGGFace2 constant while evaluating MTCNN-guided face cropping and controlled
-fallback behavior. Separating the decisions prevents checkpoint differences
-from being confused with preprocessing effects.
+The results also set the reference for Experiment 02, which held VGGFace2
+constant while evaluating MTCNN-guided face cropping and controlled fallback
+behavior. Separating the decisions prevented checkpoint differences from being
+confused with preprocessing effects.
 
 ## Limitations
 
@@ -155,15 +173,20 @@ from being confused with preprocessing effects.
 - Full-image resizing isolates embedding behavior but does not represent the
   final MTCNN-guided runtime pipeline.
 
-## Reproducibility
+## Implementation and reproducibility
 
-- Dataset preparation: [`01_prepare_dataset.py`](../../scripts/01_embedding_robustness/01_prepare_dataset.py)
-- Checkpoint comparison: [`02_run_comparison.py`](../../scripts/01_embedding_robustness/02_run_comparison.py)
-- Figure generation: [`03_generate_figures.py`](../../scripts/01_embedding_robustness/03_generate_figures.py)
-- Canonical outputs: [`outputs/01_embedding_robustness`](../../outputs/01_embedding_robustness/)
-- Runtime embedding implementation: [`embedding.py`](../../../identification_service/modules/extraction/embedding.py)
+The experiment is implemented through three public code paths:
 
-The canonical run used Python 3.11, CPU inference, batch size 32,
-`facenet-pytorch 2.5.3`, `torch 2.12.1`, and `numpy 2.4.6`. The run manifest
-records the dataset fingerprint, dependency versions, processing policy, and
-SHA-256 hash of every result table.
+- `experiments/scripts/01_embedding_robustness/01_prepare_dataset.py` validates
+  the gallery/probe split and produces the portable dataset inventory;
+- `experiments/scripts/01_embedding_robustness/02_run_comparison.py` evaluates
+  both checkpoints under the five declared probe conditions;
+- `identification_service/modules/extraction/embedding.py` contains the runtime
+  embedding implementation selected by the experiment.
+
+The external gallery and probe assets must follow the layout documented in
+`identification_service/storage/README.md`. Python dependencies are defined in
+the repository-level `requirements.txt`, and each experiment script exposes its
+input and execution contract through `--help`. A valid reproduction must retain
+the same identity split, transformations, ranking policy, and 999-probe
+evaluation population described above.

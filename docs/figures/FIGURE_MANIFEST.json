@@ -1,0 +1,43 @@
+{
+  "asset_count": 5,
+  "files": [
+    {
+      "bytes": 223771,
+      "role": "Implemented runtime and operational scope",
+      "sha256": "ad6e7c325e63ac2020ccbe6871c418374397a921cb8488c2fc0aead376cf13b4",
+      "source_relative_to_experiment_figure_root": null,
+      "target": "01_system_scope.png"
+    },
+    {
+      "bytes": 218394,
+      "role": "Embedding-checkpoint quality and stability comparison",
+      "sha256": "2390e94041f96ced4d9167940d34fa5ad08f5c7b86d27dd8d6cfdd5cdc3dbb29",
+      "source_relative_to_experiment_figure_root": "01_embedding_robustness/01_checkpoint_comparison.png",
+      "target": "02_embedding_robustness.png"
+    },
+    {
+      "bytes": 219312,
+      "role": "Paired face-preprocessing decision",
+      "sha256": "917d734b675bdfbc73982279db7c1adc4b98a80ed549c268ee44d237cdbc7a83",
+      "source_relative_to_experiment_figure_root": "02_face_preprocessing/01_preprocessing_decision.png",
+      "target": "03_face_preprocessing.png"
+    },
+    {
+      "bytes": 203508,
+      "role": "Candidate-list coverage and review-burden trade-off",
+      "sha256": "013349119c6333a760af569671ea4c8e4f99119953696f709a7f1fe3551bda85",
+      "source_relative_to_experiment_figure_root": "03_retrieval_configuration/01_candidate_list_decision.png",
+      "target": "04_candidate_list_configuration.png"
+    },
+    {
+      "bytes": 209198,
+      "role": "Gallery-depth quality and enrollment-cost trade-off",
+      "sha256": "e0fd1de95c2f5d34e7bf8dcda4104ae35bbe77b86119681ebfdbefb2be6e5baa",
+      "source_relative_to_experiment_figure_root": "03_retrieval_configuration/02_gallery_depth_decision.png",
+      "target": "05_gallery_depth_configuration.png"
+    }
+  ],
+  "generator": "experiments/scripts/build_project_report_figures.py",
+  "logical_figure_count": 5,
+  "schema_version": 1
+}
