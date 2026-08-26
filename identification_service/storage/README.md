@@ -3,6 +3,11 @@
 This directory is reserved for local face-identification assets. Dataset files
 are intentionally excluded from version control.
 
+The externally managed benchmark corpus is not redistributed with this
+repository. Anyone reproducing the experiments must obtain compatible assets
+from an authorized source and independently confirm the applicable license,
+terms, and permitted use.
+
 Expected layout:
 
 ```text

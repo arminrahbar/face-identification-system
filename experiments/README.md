@@ -33,5 +33,10 @@ Experiment scripts are placed inside their own folders. Shared dataset,
 embedding-cache, and retrieval-evaluation utilities may live under
 `experiments/scripts/shared/` when more than one experiment uses them.
 
-Only verified outputs and publication-quality figures should be tracked. Raw run
-logs, caches, temporary artifacts, and local development notes remain ignored.
+Only verified aggregate outputs and publication-quality figures should be
+tracked. Corpus-linked manifests and row-level results, raw run logs, caches,
+temporary artifacts, and local development notes remain ignored.
+
+The [experiment report index](reports/README.md) presents the three decisions as
+one connected engineering sequence. The [output contract](OUTPUTS.md) defines
+which result artifacts are retained and which data remains external or local.

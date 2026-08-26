@@ -30,7 +30,7 @@ engineering priorities.
 
 ## Intended system boundary
 
-The initial backend component will support two primary workflows:
+The current backend component supports two primary workflows:
 
 1. **Enrollment:** preprocess a gallery image, extract its embedding, and associate
    the indexed representation with an identity.

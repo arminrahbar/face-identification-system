@@ -27,6 +27,19 @@ scratch/
 experiments/cache/
 experiments/runs/
 
+# Corpus-linked experiment evidence retained locally
+experiments/outputs/01_embedding_robustness/comparison_run.json
+experiments/outputs/01_embedding_robustness/dataset_audit.json
+experiments/outputs/01_embedding_robustness/dataset_manifest.csv
+experiments/outputs/01_embedding_robustness/probe_rankings.csv
+experiments/outputs/02_face_preprocessing/comparison_run.json
+experiments/outputs/02_face_preprocessing/detection_records.csv
+experiments/outputs/02_face_preprocessing/preprocessing_audit.json
+experiments/outputs/02_face_preprocessing/probe_case_analysis.csv
+experiments/outputs/02_face_preprocessing/probe_rankings.csv
+experiments/outputs/03_retrieval_configuration/full_pipeline_rankings_top50.csv
+experiments/outputs/03_retrieval_configuration/retrieval_configuration_run.json
+
 # Local face data and generated service state
 identification_service/storage/*
 !identification_service/storage/README.md
