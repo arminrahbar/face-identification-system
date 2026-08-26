@@ -51,6 +51,70 @@ operational monitoring will be added only when they are genuinely implemented.
 The current service keeps gallery embeddings in process memory. Restarting the
 service clears enrolled state; durable index persistence is not implemented yet.
 
+## Local execution
+
+Create a Python 3.11 environment, install the pinned dependencies, and start the
+development server:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --requirement requirements.txt
+python -m identification_service.app
+```
+
+The first request may download the selected pretrained model into the current
+user's cache. The service listens on `http://127.0.0.1:5000`.
+
+Enroll a gallery image:
+
+```bash
+curl --request POST http://127.0.0.1:5000/add \
+  --form "identity=example-person" \
+  --form "image=@gallery-image.jpg"
+```
+
+Identify a probe using the measured five-candidate default:
+
+```bash
+curl --request POST http://127.0.0.1:5000/identify \
+  --form "probe=@probe-image.jpg"
+```
+
+## Container execution
+
+Build and run the service with a persistent cache for pretrained model files:
+
+```bash
+docker build \
+  --file identification_service/Dockerfile \
+  --tag face-identification-system .
+
+docker run --rm \
+  --publish 5000:5000 \
+  --mount type=volume,src=face-model-cache,dst=/home/app/.cache \
+  face-identification-system
+```
+
+The image runs as a non-root user. It intentionally uses one Gunicorn worker
+because enrolled gallery state is currently held in process memory; four worker
+threads share that service instance. Multiple processes require a durable shared
+index, which is outside the current implementation. The container installs the
+CPU-only PyTorch and torchvision wheels because the packaged service does not
+require a CUDA runtime.
+
+## Verification
+
+Run the complete public test suite with:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+GitHub Actions runs the same test suite, checks installed dependency
+consistency, builds the service image, and validates its non-root runtime,
+dependencies, routes, and Gunicorn configuration.
+
 ## Repository structure
 
 - `identification_service/`: backend enrollment and identification service.
