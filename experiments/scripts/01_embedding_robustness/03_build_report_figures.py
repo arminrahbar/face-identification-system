@@ -1,15 +1,27 @@
-"""Generate publication-quality figures from verified Experiment 01 results."""
+"""Build publication-quality figures from verified Experiment 01 results."""
 
 from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import json
+import sys
 from pathlib import Path
 from typing import Sequence
 
 import numpy as np
+
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+SHARED_SCRIPT_DIR = SCRIPT_DIR.parent
+if str(SHARED_SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SHARED_SCRIPT_DIR))
+
+from report_figure_style import (  # noqa: E402
+    apply_experiment_style,
+    save_experiment_figure,
+    sha256_file,
+)
 
 
 MODELS = ("vggface2", "casia-webface")
@@ -50,10 +62,10 @@ FIGURE_FILENAMES = (
 )
 
 
-def generate_figures(
+def build_report_figures(
     *, input_dir: Path, output_dir: Path, force: bool = False
 ) -> tuple[Path, ...]:
-    """Validate canonical results and generate all Experiment 01 figures."""
+    """Validate canonical results and build all Experiment 01 report figures."""
 
     results = load_verified_results(input_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -71,7 +83,7 @@ def generate_figures(
     import matplotlib.pyplot as plt
     from matplotlib.ticker import PercentFormatter
 
-    _apply_style(plt)
+    apply_experiment_style(plt)
     _plot_checkpoint_comparison(
         plt=plt,
         percent_formatter=PercentFormatter,
@@ -95,7 +107,7 @@ def generate_figures(
 
     for path in output_paths:
         print(f"[WRITE] {path}")
-        print(f"        sha256={_sha256_file(path)}")
+        print(f"        sha256={sha256_file(path)}")
     return output_paths
 
 
@@ -115,7 +127,7 @@ def load_verified_results(input_dir: Path) -> dict[str, object]:
 
     for filename, expected_hash in manifest.get("artifacts", {}).items():
         path = input_dir / filename
-        if _sha256_file(path) != expected_hash:
+        if sha256_file(path) != expected_hash:
             raise ValueError(f"artifact hash does not match manifest: {filename}")
 
     results: dict[str, object] = {"manifest": manifest}
@@ -246,7 +258,7 @@ def _plot_checkpoint_comparison(
         "999 probe identities per condition; 2,265 gallery images across 1,000 identities; exact cosine retrieval.",
     )
     figure.subplots_adjust(left=0.06, right=0.99, top=0.80, bottom=0.23, wspace=0.27)
-    _save_figure(plt, figure, output_path)
+    save_experiment_figure(plt, figure, output_path)
 
 
 def _plot_selected_checkpoint_robustness(
@@ -358,7 +370,7 @@ def _plot_selected_checkpoint_robustness(
         "Retention is measured only among the 822 probes VGGFace2 ranked correctly at Top-1 under clean input.",
     )
     figure.subplots_adjust(left=0.06, right=0.99, top=0.83, bottom=0.23, wspace=0.27)
-    _save_figure(plt, figure, output_path)
+    save_experiment_figure(plt, figure, output_path)
 
 
 def _plot_transformation_diagnostics(
@@ -416,26 +428,7 @@ def _plot_transformation_diagnostics(
         "Statistics are calculated from transformed RGB images before the final 160 × 160 model resize.",
     )
     figure.subplots_adjust(left=0.06, right=0.99, top=0.83, bottom=0.23, wspace=0.27)
-    _save_figure(plt, figure, output_path)
-
-
-def _apply_style(plt) -> None:
-    plt.rcParams.update(
-        {
-            "font.family": "DejaVu Sans",
-            "font.size": 10,
-            "axes.facecolor": "#FBFCFE",
-            "axes.edgecolor": "#9CA3AF",
-            "axes.grid": True,
-            "axes.axisbelow": True,
-            "axes.spines.top": False,
-            "axes.spines.right": False,
-            "grid.color": "#E5E7EB",
-            "grid.linewidth": 0.8,
-            "figure.facecolor": "white",
-            "savefig.facecolor": "white",
-        }
-    )
+    save_experiment_figure(plt, figure, output_path)
 
 
 def _configure_percentage_axis(
@@ -478,18 +471,6 @@ def _add_figure_note(figure, text: str) -> None:
     figure.text(0.5, 0.055, text, ha="center", fontsize=9, color="#4B5563")
 
 
-def _save_figure(plt, figure, output_path: Path) -> None:
-    temporary_path = output_path.with_name(f".{output_path.name}.tmp")
-    figure.savefig(
-        temporary_path,
-        format="png",
-        dpi=180,
-        metadata={"Software": "face-identification-system"},
-    )
-    plt.close(figure)
-    temporary_path.replace(output_path)
-
-
 def _lookup(rows: Sequence[dict[str, str]]) -> dict[tuple[str, str], dict[str, str]]:
     return {(row["model"], row["condition"]): row for row in rows}
 
@@ -499,17 +480,9 @@ def _read_csv(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
-def _sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate verified Experiment 01 report figures."
+        description="Build verified Experiment 01 report figures."
     )
     parser.add_argument(
         "--input-dir",
@@ -527,7 +500,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    generate_figures(
+    build_report_figures(
         input_dir=args.input_dir,
         output_dir=args.output_dir,
         force=args.force,

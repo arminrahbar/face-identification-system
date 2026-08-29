@@ -1,23 +1,32 @@
-"""Generate publication-quality figures from verified Experiment 03 results."""
+"""Build publication-quality figures from verified Experiment 03 results."""
 
 from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import json
+import sys
 from pathlib import Path
 from typing import Sequence
 
 import numpy as np
 
 
-BLUE = "#0072B2"
-GREEN = "#009E73"
-ORANGE = "#D55E00"
-GREY = "#6B7280"
-LIGHT_GREY = "#B8C0CC"
-PURPLE = "#7C3AED"
+SCRIPT_DIR = Path(__file__).resolve().parent
+SHARED_SCRIPT_DIR = SCRIPT_DIR.parent
+if str(SHARED_SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SHARED_SCRIPT_DIR))
+
+from report_figure_style import (  # noqa: E402
+    BLUE,
+    GREEN,
+    GREY,
+    LIGHT_GREY,
+    PURPLE,
+    apply_experiment_style,
+    save_experiment_figure,
+    sha256_file,
+)
 
 FIGURE_FILENAMES = (
     "01_candidate_list_decision.png",
@@ -26,10 +35,10 @@ FIGURE_FILENAMES = (
 )
 
 
-def generate_figures(
+def build_report_figures(
     *, input_dir: Path, output_dir: Path, force: bool = False
 ) -> tuple[Path, ...]:
-    """Validate canonical results and generate all Experiment 03 figures."""
+    """Validate canonical results and build all Experiment 03 report figures."""
 
     results = load_verified_results(input_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -47,7 +56,7 @@ def generate_figures(
     import matplotlib.pyplot as plt
     from matplotlib.ticker import PercentFormatter
 
-    _apply_style(plt)
+    apply_experiment_style(plt)
     _plot_candidate_list_decision(
         plt=plt,
         percent_formatter=PercentFormatter,
@@ -71,7 +80,7 @@ def generate_figures(
 
     for path in output_paths:
         print(f"[WRITE] {path}")
-        print(f"        sha256={_sha256_file(path)}")
+        print(f"        sha256={sha256_file(path)}")
     return output_paths
 
 
@@ -119,7 +128,7 @@ def load_verified_results(input_dir: Path) -> dict[str, object]:
         filename = f"{table_name}.csv"
         path = input_dir / filename
         metadata = artifact_metadata[filename]
-        if _sha256_file(path) != metadata.get("sha256"):
+        if sha256_file(path) != metadata.get("sha256"):
             raise ValueError(f"artifact hash does not match: {filename}")
         rows = _read_csv(path)
         if len(rows) != row_count or metadata.get("rows") != row_count:
@@ -252,7 +261,7 @@ def _plot_candidate_list_decision(
     figure.subplots_adjust(
         left=0.06, right=0.99, top=0.82, bottom=0.22, wspace=0.30
     )
-    _save_figure(plt, figure, output_path)
+    save_experiment_figure(plt, figure, output_path)
 
 
 def _plot_gallery_depth_decision(
@@ -373,7 +382,7 @@ def _plot_gallery_depth_decision(
     figure.subplots_adjust(
         left=0.06, right=0.99, top=0.82, bottom=0.22, wspace=0.30
     )
-    _save_figure(plt, figure, output_path)
+    save_experiment_figure(plt, figure, output_path)
 
 
 def _plot_gallery_population_context(
@@ -457,26 +466,7 @@ def _plot_gallery_population_context(
     figure.subplots_adjust(
         left=0.06, right=0.99, top=0.82, bottom=0.22, wspace=0.30
     )
-    _save_figure(plt, figure, output_path)
-
-
-def _apply_style(plt) -> None:
-    plt.rcParams.update(
-        {
-            "font.family": "DejaVu Sans",
-            "font.size": 10,
-            "axes.facecolor": "#FBFCFE",
-            "axes.edgecolor": "#9CA3AF",
-            "axes.grid": True,
-            "axes.axisbelow": True,
-            "axes.spines.top": False,
-            "axes.spines.right": False,
-            "grid.color": "#E5E7EB",
-            "grid.linewidth": 0.8,
-            "figure.facecolor": "white",
-            "savefig.facecolor": "white",
-        }
-    )
+    save_experiment_figure(plt, figure, output_path)
 
 
 def _label_integer_bars(axis, bars, values: Sequence[int]) -> None:
@@ -509,34 +499,14 @@ def _add_figure_note(figure, text: str) -> None:
     figure.text(0.5, 0.055, text, ha="center", fontsize=9, color="#4B5563")
 
 
-def _save_figure(plt, figure, output_path: Path) -> None:
-    temporary_path = output_path.with_name(f".{output_path.name}.tmp")
-    figure.savefig(
-        temporary_path,
-        format="png",
-        dpi=180,
-        metadata={"Software": "face-identification-system"},
-    )
-    plt.close(figure)
-    temporary_path.replace(output_path)
-
-
 def _read_csv(path: Path) -> list[dict[str, str]]:
     with path.open(newline="", encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
 
 
-def _sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate verified Experiment 03 report figures."
+        description="Build verified Experiment 03 report figures."
     )
     parser.add_argument(
         "--input-dir",
@@ -554,7 +524,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    generate_figures(
+    build_report_figures(
         input_dir=args.input_dir,
         output_dir=args.output_dir,
         force=args.force,

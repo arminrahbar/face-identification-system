@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import shutil
+import sys
 import textwrap
 from pathlib import Path
 
@@ -17,17 +17,28 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Rectangle
 
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from report_figure_style import (  # noqa: E402
+    BLUE,
+    GRID,
+    INK,
+    MUTED,
+    NAVY,
+    TEAL,
+    WHITE,
+    project_style_context,
+    require,
+    sha256_file,
+    validate_png,
+)
+
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SOURCE_ROOT = PROJECT_ROOT / "experiments" / "figures"
 MANIFEST_NAME = "FIGURE_MANIFEST.json"
-
-INK = "#20262E"
-MUTED = "#5D6875"
-GRID = "#D9E0E7"
-WHITE = "#FFFFFF"
-NAVY = "#1F4E79"
-BLUE = "#0072B2"
-TEAL = "#009E73"
 
 CURATED_SOURCES = (
     (
@@ -51,42 +62,6 @@ CURATED_SOURCES = (
         "Gallery-depth quality and enrollment-cost trade-off",
     ),
 )
-
-
-class FigureBuildError(ValueError):
-    """Raised when the public figure package cannot be assembled safely."""
-
-
-def _require(condition: bool, message: str) -> None:
-    if not condition:
-        raise FigureBuildError(message)
-
-
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def _validate_png(path: Path) -> None:
-    _require(path.is_file(), f"Missing curated PNG source: {path}")
-    _require(
-        path.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n",
-        f"Invalid PNG signature: {path}",
-    )
-
-
-def _style_context():
-    return plt.rc_context(
-        {
-            "font.family": "DejaVu Sans",
-            "font.size": 10,
-            "figure.facecolor": WHITE,
-            "text.color": INK,
-        }
-    )
 
 
 def _system_scope_figure():
@@ -207,7 +182,7 @@ def _system_scope_figure():
 
 def _save_system_scope(staging: Path) -> dict[str, object]:
     path = staging / "01_system_scope.png"
-    with _style_context():
+    with project_style_context():
         figure = _system_scope_figure()
         figure.savefig(
             path,
@@ -217,13 +192,13 @@ def _save_system_scope(staging: Path) -> dict[str, object]:
             metadata={"Software": "Matplotlib"},
         )
         plt.close(figure)
-    _validate_png(path)
+    validate_png(path)
     return {
         "target": path.name,
         "source_relative_to_experiment_figure_root": None,
         "role": "Implemented runtime and operational scope",
         "bytes": path.stat().st_size,
-        "sha256": _sha256(path),
+        "sha256": sha256_file(path),
     }
 
 
@@ -235,16 +210,19 @@ def _copy_curated_png(
     role: str,
 ) -> dict[str, object]:
     source = source_root / f"{source_stem}.png"
-    _validate_png(source)
+    validate_png(source)
     destination = staging / f"{target_stem}.png"
     shutil.copyfile(source, destination)
-    _require(_sha256(source) == _sha256(destination), f"Copy hash mismatch: {source}")
+    require(
+        sha256_file(source) == sha256_file(destination),
+        f"Copy hash mismatch: {source}",
+    )
     return {
         "target": destination.name,
         "source_relative_to_experiment_figure_root": f"{source_stem}.png",
         "role": role,
         "bytes": destination.stat().st_size,
-        "sha256": _sha256(destination),
+        "sha256": sha256_file(destination),
     }
 
 
@@ -253,11 +231,11 @@ def build_project_figure_package(source_root: Path, output_dir: Path) -> Path:
 
     source_root = source_root.expanduser().absolute()
     destination = output_dir.expanduser().absolute()
-    _require(source_root.is_dir(), f"Experiment figure root not found: {source_root}")
-    _require(not destination.exists(), f"Refusing to overwrite output: {destination}")
+    require(source_root.is_dir(), f"Experiment figure root not found: {source_root}")
+    require(not destination.exists(), f"Refusing to overwrite output: {destination}")
     destination.parent.mkdir(parents=True, exist_ok=True)
     staging = destination.parent / f".{destination.name}.incomplete"
-    _require(not staging.exists(), f"Incomplete figure build already exists: {staging}")
+    require(not staging.exists(), f"Incomplete figure build already exists: {staging}")
 
     staging.mkdir()
     records = []
@@ -288,7 +266,7 @@ def build_project_figure_package(source_root: Path, output_dir: Path) -> Path:
         )
         expected = {str(record["target"]) for record in records} | {MANIFEST_NAME}
         actual = {path.name for path in staging.iterdir() if path.is_file()}
-        _require(actual == expected, "Project figure package has an unexpected file set.")
+        require(actual == expected, "Project figure package has an unexpected file set.")
         os.replace(staging, destination)
     except Exception:
         raise

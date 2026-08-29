@@ -1,15 +1,27 @@
-"""Generate publication-quality figures from verified Experiment 02 results."""
+"""Build publication-quality figures from verified Experiment 02 results."""
 
 from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import json
+import sys
 from pathlib import Path
 from typing import Sequence
 
 import numpy as np
+
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+SHARED_SCRIPT_DIR = SCRIPT_DIR.parent
+if str(SHARED_SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SHARED_SCRIPT_DIR))
+
+from report_figure_style import (  # noqa: E402
+    apply_experiment_style,
+    save_experiment_figure,
+    sha256_file,
+)
 
 
 CONDITIONS = ("full_image", "mtcnn_crop_fallback")
@@ -28,10 +40,10 @@ FIGURE_FILENAMES = (
 )
 
 
-def generate_figures(
+def build_report_figures(
     *, input_dir: Path, output_dir: Path, force: bool = False
 ) -> tuple[Path, ...]:
-    """Validate canonical results and generate all Experiment 02 figures."""
+    """Validate canonical results and build all Experiment 02 report figures."""
 
     results = load_verified_results(input_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -49,7 +61,7 @@ def generate_figures(
     import matplotlib.pyplot as plt
     from matplotlib.ticker import PercentFormatter
 
-    _apply_style(plt)
+    apply_experiment_style(plt)
     _plot_preprocessing_decision(
         plt=plt,
         percent_formatter=PercentFormatter,
@@ -73,7 +85,7 @@ def generate_figures(
 
     for path in output_paths:
         print(f"[WRITE] {path}")
-        print(f"        sha256={_sha256_file(path)}")
+        print(f"        sha256={sha256_file(path)}")
     return output_paths
 
 
@@ -108,11 +120,11 @@ def load_verified_results(input_dir: Path) -> dict[str, object]:
 
     for filename, metadata in preprocessing.get("artifacts", {}).items():
         path = input_dir / filename
-        if _sha256_file(path) != metadata.get("sha256"):
+        if sha256_file(path) != metadata.get("sha256"):
             raise ValueError(f"artifact hash does not match audit: {filename}")
     for filename, metadata in comparison.get("artifacts", {}).items():
         path = input_dir / filename
-        if _sha256_file(path) != metadata.get("sha256"):
+        if sha256_file(path) != metadata.get("sha256"):
             raise ValueError(f"artifact hash does not match comparison: {filename}")
 
     table_expectations = {
@@ -268,7 +280,7 @@ def _plot_preprocessing_decision(
         "VGGFace2 embeddings; 2,265 gallery images; exact cosine retrieval; 10,000 paired bootstrap samples.",
     )
     figure.subplots_adjust(left=0.06, right=0.99, top=0.82, bottom=0.23, wspace=0.28)
-    _save_figure(plt, figure, output_path)
+    save_experiment_figure(plt, figure, output_path)
 
 
 def _plot_detection_audit(
@@ -373,7 +385,7 @@ def _plot_detection_audit(
         "Crop statistics exclude the one fallback image; 160 × 160 crops were stored losslessly for evaluation.",
     )
     figure.subplots_adjust(left=0.06, right=0.99, top=0.82, bottom=0.23, wspace=0.34)
-    _save_figure(plt, figure, output_path)
+    save_experiment_figure(plt, figure, output_path)
 
 
 def _plot_rank_movement(
@@ -469,26 +481,7 @@ def _plot_rank_movement(
         "Rank movement is paired by probe; panel C shows the five largest gains and five largest losses.",
     )
     figure.subplots_adjust(left=0.06, right=0.99, top=0.82, bottom=0.20, wspace=0.35)
-    _save_figure(plt, figure, output_path)
-
-
-def _apply_style(plt) -> None:
-    plt.rcParams.update(
-        {
-            "font.family": "DejaVu Sans",
-            "font.size": 10,
-            "axes.facecolor": "#FBFCFE",
-            "axes.edgecolor": "#9CA3AF",
-            "axes.grid": True,
-            "axes.axisbelow": True,
-            "axes.spines.top": False,
-            "axes.spines.right": False,
-            "grid.color": "#E5E7EB",
-            "grid.linewidth": 0.8,
-            "figure.facecolor": "white",
-            "savefig.facecolor": "white",
-        }
-    )
+    save_experiment_figure(plt, figure, output_path)
 
 
 def _label_percentage_bars(
@@ -523,34 +516,14 @@ def _add_figure_note(figure, text: str) -> None:
     figure.text(0.5, 0.055, text, ha="center", fontsize=9, color="#4B5563")
 
 
-def _save_figure(plt, figure, output_path: Path) -> None:
-    temporary_path = output_path.with_name(f".{output_path.name}.tmp")
-    figure.savefig(
-        temporary_path,
-        format="png",
-        dpi=180,
-        metadata={"Software": "face-identification-system"},
-    )
-    plt.close(figure)
-    temporary_path.replace(output_path)
-
-
 def _read_csv(path: Path) -> list[dict[str, str]]:
     with path.open(newline="", encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
 
 
-def _sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate verified Experiment 02 report figures."
+        description="Build verified Experiment 02 report figures."
     )
     parser.add_argument(
         "--input-dir",
@@ -568,7 +541,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    generate_figures(
+    build_report_figures(
         input_dir=args.input_dir,
         output_dir=args.output_dir,
         force=args.force,
